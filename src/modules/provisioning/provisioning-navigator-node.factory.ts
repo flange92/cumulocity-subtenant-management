@@ -11,6 +11,20 @@ export class ProvisioningNavigatorNodeFactory implements NavigatorNodeFactory {
       path: 'provisioning'
     });
 
+    const eplNode = new NavigatorNode({
+      label: 'EPL Rules',
+      path: 'provisioning/epl',
+      icon: 'c8y-apama-epl'
+    });
+    this.provisioningNode.add(eplNode);
+
+    const analyticsModelNode = new NavigatorNode({
+      label: 'Analytics Builder',
+      path: 'provisioning/analytics-builder',
+      icon: 'c8y-analytics-builder'
+    });
+    this.provisioningNode.add(analyticsModelNode);
+
     const applicationsNode = new NavigatorNode({
       label: 'Applications',
       path: 'provisioning/applications',
@@ -61,7 +75,7 @@ export class ProvisioningNavigatorNodeFactory implements NavigatorNodeFactory {
     this.provisioningNode.add(smartGroupsNode);
 
     const alarmMappingNode = new NavigatorNode({
-      label: 'Alarm Mapping',
+      label: 'Alarm Transformation',
       path: 'provisioning/alarm-mapping',
       icon: 'c8y-alarm'
     });

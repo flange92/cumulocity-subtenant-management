@@ -1,12 +1,12 @@
 {
   "name": "cumulocity-subtenant-management",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "description": "Tool for managing subtenants from a c8y management or enterprise tenant",
   "scripts": {
-    "start": "c8ycli server",
+    "start": "c8ycli server" ,
     "build": "rimraf dist && c8ycli build",
     "build:ci": "rimraf dist && c8ycli build --ci true ./",
-    "deploy": "c8ycli deploy",
+    "deploy": "c8ycli deploy ",
     "locale-extract": "c8ycli locale-extract",
     "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix",
     "lint:with-warns": "tsc --noEmit && eslint . --ext js,ts,json --fix",
@@ -67,9 +67,9 @@
   },
   "c8y": {
     "application": {
-      "name": "Subtenant Management",
-      "contextPath": "sag-pkg-subtenant-management",
-      "key": "sag-pkg-subtenant-management-application-key",
+      "name": "Subtenant Management 2.0",
+      "contextPath": "sag-pkg-subtenant-management-2",
+      "key": "sag-pkg-subtenant-management-application-2-key",
       "upgrade": true,
       "tabsHorizontal": true,
       "dynamicOptionsUrl": "/apps/public/public-options/options.json",

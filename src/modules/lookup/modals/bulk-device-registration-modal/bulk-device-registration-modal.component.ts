@@ -7,7 +7,7 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Subject } from 'rxjs';
 import { saveAs } from 'file-saver';
 
-const fullCsvHeaders: string[] = ['ID', 'CREDENTIALS', 'TYPE', 'NAME', 'ICCID', 'IDTYPE', 'PATH', 'SHELL', 'AUTH_TYPE'];
+const fullCsvHeaders: string[] = ['ID', 'CREDENTIALS', 'TYPE', 'NAME'];
 
 @Component({
   selector: 'ps-bulk-device-registration-modal',
@@ -28,7 +28,7 @@ export class BulkDeviceRegistrationModalComponent {
     private bsModalRef: BsModalRef,
     private alertService: AlertService,
     private deviceRegistrationDetailsService: DeviceRegistrationDetailsService
-  ) { }
+  ) {}
 
   onTenantSelect(): void {
     if (!this.selectedClient || this.selectedTenant !== this.selectedClient.core.tenant) {
@@ -60,7 +60,7 @@ export class BulkDeviceRegistrationModalComponent {
   }
 
   download(headers: string[], fileName: string) {
-    const headerRaw = headers.map((header) => `"${header}"`).join(';');
+    const headerRaw = headers.map((header) => `${header}`).join(';');
     const binaryFile = new Blob([headerRaw], { type: 'text/csv' });
     saveAs(binaryFile, fileName);
   }

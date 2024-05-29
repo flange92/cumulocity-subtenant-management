@@ -78,7 +78,7 @@ import { OperationSchedulerComponent } from './firmware-provisioning/components/
             component: SmartGroupsProvisioningComponent
           },
           {
-            path: 'alarm-mapping',
+            path: 'alarm-transformation',
             component: AlarmMappingProvisioningComponent
           }
         ]

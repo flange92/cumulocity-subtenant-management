@@ -76,7 +76,7 @@ export class ProvisioningNavigatorNodeFactory implements NavigatorNodeFactory {
 
     const alarmMappingNode = new NavigatorNode({
       label: 'Alarm Transformation',
-      path: 'provisioning/alarm-mapping',
+      path: 'provisioning/alarm-transformation',
       icon: 'c8y-alarm'
     });
     this.provisioningNode.add(alarmMappingNode);

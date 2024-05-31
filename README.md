@@ -22,10 +22,10 @@ The following actions can be performed on the subtenants:
   - create bulk device registration request
   - cancel/accept
 - Firmware update history (see failing/successfull firmware updates)
-- Provisioning
-  - Alarm transformations
-  - Analytics Builder
-  - Applications (Lists the available applications, microservices, packages available in the tenant along with the list of active tenants having the app. Subscribe / un-subscribe from the specific tenant option is available.  )
+- **Provisioning**
+  - **Alarm transformations**
+  - **Analytics Builder**
+  - **Applications** (Lists the available applications, microservices, packages available in the tenant along with the list of active tenants having the app. Subscribe / un-subscribe from the specific tenant option is available.  )
   - EPL Rules
   - Firmware (Lists the firmware available in the tenant. Provision/Re-provision options are available for all selected sub-tenants.)
   - Global roles (Lists global rules available in the tenant, incl. permissions and applications. Existing global roles can be re-provisioned for sub-tenants)

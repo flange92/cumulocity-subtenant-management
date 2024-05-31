@@ -9,9 +9,10 @@ import {
   ICredentials,
   IFetchResponse,
   IMicroserviceSubscriptionsResponse,
+  ITenant,
   ITenantLoginOption
 } from '@c8y/client';
-import { AlertService, AppStateService, LoginService } from '@c8y/ngx-components';
+import { AlertService, AppStateService, LoginService, ModalService, OptionsService, Status } from '@c8y/ngx-components';
 import { flatMap, get, omit, uniq } from 'lodash-es';
 import { CustomApiService } from './custom-api.service';
 import { SubtenantDetailsService } from './subtenant-details.service';
@@ -19,6 +20,7 @@ import { ApplicationSubscriptionService } from './application-subscription.servi
 import { interval, Subscription } from 'rxjs';
 import { BearerAuth } from '@models/BearerAuth';
 import { CustomBasicAuth } from '@models/CustomBasicAuth';
+import { TenantSelectionService } from '@modules/shared/tenant-selection/tenant-selection.service';
 
 export const HOOK_MICROSERVICE_ROLE = new InjectionToken('MicroserviceRole');
 
@@ -32,7 +34,7 @@ export class FakeMicroserviceService implements OnDestroy {
   private clientsPromiseCache = new Map<string, Promise<Client>>();
   private clientsAuthCache = new Map<string, BasicAuth | BearerAuth>();
   private clientsCredentialsCache = new Map<string, ICredentials>();
-
+  private cachedModal: Promise<unknown>;
   private oauthTokenExpirySub: Subscription;
 
   constructor(
@@ -41,12 +43,15 @@ export class FakeMicroserviceService implements OnDestroy {
     factories: (string | string[])[],
     private fetchClient: FetchClient,
     private appService: ApplicationService,
+    private modalService: ModalService,
     private customApiService: CustomApiService,
     private subtenantDetails: SubtenantDetailsService,
     private applicationSubscription: ApplicationSubscriptionService,
     private appState: AppStateService,
     private alertService: AlertService,
-    private loginService: LoginService
+    private options: OptionsService,
+    private loginService: LoginService,
+    private tenantSelectionService: TenantSelectionService
   ) {
     if (factories) {
       const roles = flatMap(factories);
@@ -84,12 +89,35 @@ export class FakeMicroserviceService implements OnDestroy {
     }
   }
 
-  /**
-   * CreateClients creates a client for each tenant in the credentials array.
-   * @param credentials
-   * @param domain
-   * @returns
-   */
+  private async checkDataUsageConfirmed() {
+    if (!this.cachedModal) {
+      this.cachedModal = this.modalService.confirm(
+        'Accessing data of subtenants/customers',
+        'This is a very powerful tool, that allows you to look into subtenants of your current tenant and to perform actions that could potentially break things. Also for data protection reasons make sure that your subtenants are aware of the fact that you are able to access their devices and data.\r\n\r\n"With great power there must also come great responsibility."',
+        Status.DANGER,
+        {
+          ok: 'I accept the potential risks & made subtenants aware',
+          cancel: 'Cancel'
+        }
+      );
+    }
+    try {
+      await this.cachedModal;
+    } catch (e) {
+      this.cachedModal = null;
+      throw e;
+    }
+  }
+
+  private async subsetOfTenantsSelected(tenants: ITenant[]) {
+    const selectedTenantIds = await this.tenantSelectionService.getTenantSelection(tenants, {
+      label: 'Select subset of tenants to be accessed',
+      title: 'Select tenant subset'
+    });
+
+    return tenants.filter((tmp) => selectedTenantIds.includes(tmp.id));
+  }
+
   public async createClients(credentials: ICredentials[], domain?: string): Promise<Client[]> {
     return Promise.all(
       credentials.map((cred) => {
@@ -186,9 +214,9 @@ export class FakeMicroserviceService implements OnDestroy {
     return json.access_token;
   }
 
-  public async prepareCachedDummyMicroserviceForAllSubtenants(baseUrl?: string): Promise<ICredentials[]> {
+  public async prepareCachedDummyMicroserviceForAllSubtenants(): Promise<ICredentials[]> {
     if (!this.credentialsCache) {
-      this.credentialsCache = this.prepareDummyMicroserviceForAllSubtenants(baseUrl);
+      this.credentialsCache = this.prepareDummyMicroserviceForAllSubtenants();
     }
     try {
       return await this.credentialsCache;
@@ -204,18 +232,21 @@ export class FakeMicroserviceService implements OnDestroy {
    * @param baseUrl
    * @returns
    */
-  public async prepareDummyMicroserviceForAllSubtenants(baseUrl?: string): Promise<ICredentials[]> {
+  public async prepareDummyMicroserviceForAllSubtenants(): Promise<ICredentials[]> {
     const tenantPromise = this.subtenantDetails.getTenants();
-
+    if (this.showWarnings()) {
+      await this.checkDataUsageConfirmed();
+    }
     const app = await this.createDummyMicroserviceIfNotExisting();
 
     const tenants = await tenantPromise;
-
-    const filteredTenants = tenants;
-
+    let filteredTenants = tenants;
+    if (this.showWarnings()) {
+      filteredTenants = await this.subsetOfTenantsSelected(tenants);
+    }
     await this.applicationSubscription.subscribeAppToAllTenants(app, filteredTenants);
     const bootstrapCredentials = await this.getBootstrapUser(app);
-    const subscriptions = await this.getMicroserviceSubscriptions(bootstrapCredentials, baseUrl);
+    const subscriptions = await this.getMicroserviceSubscriptions(bootstrapCredentials);
     const filteredTenantIds = filteredTenants.map((tmp) => tmp.id);
     const filteredSubscriptions = subscriptions.filter((tmp) => filteredTenantIds.includes(tmp.tenant));
     return filteredSubscriptions;
@@ -303,10 +334,7 @@ export class FakeMicroserviceService implements OnDestroy {
    * @param baseUrl
    * @returns
    */
-  private async getMicroserviceSubscriptions(
-    bootstrapCredentials: ICredentials,
-    baseUrl?: string
-  ): Promise<ICredentials[]> {
+  private async getMicroserviceSubscriptions(bootstrapCredentials: ICredentials): Promise<ICredentials[]> {
     const loginMode = get(this.loginService, 'loginMode.type', 'BASIC');
     const client: Client = new Client(new BasicAuth(bootstrapCredentials));
     if (loginMode !== 'BASIC') {
@@ -418,5 +446,15 @@ export class FakeMicroserviceService implements OnDestroy {
       throw Error(`No Client available for tenant: ${tenantId}`);
     }
     return client;
+  }
+
+  private showWarnings(): boolean {
+    if (this.options.hideWarnings === 'always') {
+      return false;
+    }
+    if (this.options.hideWarnings === 'duringDevelopment' && __MODE__ !== 'production') {
+      return false;
+    }
+    return true;
   }
 }

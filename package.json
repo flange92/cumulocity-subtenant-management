@@ -1,12 +1,12 @@
 {
   "name": "cumulocity-subtenant-management",
-  "version": "0.7.4",
+  "version": "0.7.6",
   "description": "Tool for managing subtenants from a c8y management or enterprise tenant",
   "scripts": {
     "start": "c8ycli server -u https://isc.na-dev.inet.com/" ,
     "build": "rimraf dist && c8ycli build",
     "build:ci": "rimraf dist && c8ycli build --ci true ./",
-    "deploy": "c8ycli deploy ",
+    "deploy": "c8ycli deploy -u https://isc.na-dev.inet.com/",
     "locale-extract": "c8ycli locale-extract",
     "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix",
     "lint:with-warns": "tsc --noEmit && eslint . --ext js,ts,json --fix",
